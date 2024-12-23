@@ -1,4 +1,4 @@
-package com.organame.ecommerce;
+package com.distribuidorasafari.ecommerce;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
