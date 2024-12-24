@@ -1,4 +1,4 @@
-package com.organame.ecommerce;
+package com.distribuidorasafari.ecommerce;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
