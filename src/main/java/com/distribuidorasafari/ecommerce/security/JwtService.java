@@ -1,4 +1,4 @@
-package security;
+package com.distribuidorasafari.ecommerce.security;
 
 import java.security.Key;
 import java.util.Date;

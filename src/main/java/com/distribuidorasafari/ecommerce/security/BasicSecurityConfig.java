@@ -1,4 +1,4 @@
-package security;
+package com.distribuidorasafari.ecommerce.security;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
