@@ -21,8 +21,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
 @Entity
@@ -33,10 +31,10 @@ public class Cart {
     private Long id;
     
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     @JsonIgnoreProperties("cart")
     private User user;
-    
+        
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("cart")
     private List<CartItem> cartItems = new ArrayList<>();
@@ -53,7 +51,7 @@ public class Cart {
         this.cartItems = new ArrayList<>();
     }
     
-    // Métodos auxiliares para gerenciar relacionamentos
+    // Auxiliary methods for managing relationships
     public void addCartItem(CartItem item) {
         cartItems.add(item);
         item.setCart(this);
@@ -63,8 +61,23 @@ public class Cart {
         cartItems.remove(item);
         item.setCart(null);
     }
+    
+    public void updateCartItem(CartItem item, int newQuantity) {
+        for (CartItem cartItem : cartItems) {
+            if (cartItem.getProduct().equals(item.getProduct())) {
+                cartItem.setQuantity(newQuantity);
+                return;
+            }
+        }
+        // If the product does not exist in the cart, add it
+        this.addCartItem(item);
+    }
 
-    // Caculate total on Chart
+    public void clearCart() {
+        this.cartItems.clear();
+    }
+
+    // Calculate total on Chart
     @Transient
     public BigDecimal getTotal() {
         return cartItems.stream()
@@ -73,7 +86,6 @@ public class Cart {
     }
 
     // Getters and Setters    
-
     public Long getId() {
 		return id;
 	}
