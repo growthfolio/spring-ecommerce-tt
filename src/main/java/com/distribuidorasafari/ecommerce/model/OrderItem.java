@@ -29,7 +29,7 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     @JsonIgnoreProperties("orderItems")
     private Order order;
-    
+        
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     @JsonIgnoreProperties({"orderItems", "cartItems"})
