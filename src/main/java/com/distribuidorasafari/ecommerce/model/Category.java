@@ -28,6 +28,8 @@ public class Category {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "category", cascade = CascadeType.REMOVE)
     @JsonIgnoreProperties("category")
     private List<Product> products;
+    
+    // Getters and setters
 
     public Long getId() {
         return id;

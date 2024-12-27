@@ -65,6 +65,7 @@ public class User {
     @JsonIgnoreProperties("user")
     private List<Product> products;
 
+    // Getters and setters
 
     public Long getId() {
         return id;
@@ -134,6 +135,6 @@ public class User {
         return products;
     }
 
-    public void setProducts(List<Product> products) { this.products = products; }
+    public void setProducts(List<Product> products) { this.products = products;}
 
 }
