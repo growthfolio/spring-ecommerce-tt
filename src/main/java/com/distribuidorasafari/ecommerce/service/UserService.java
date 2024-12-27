@@ -40,6 +40,7 @@ public class UserService {
     }
 
     public Optional<User> updateUser(User user) {
+
         if(userRepository.findById(user.getId()).isPresent()) {
 
             Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
@@ -79,7 +80,6 @@ public class UserService {
                 userLogin.get().setName(user.get().getName());
                 userLogin.get().setPhoto(user.get().getPhoto());
                 userLogin.get().setToken(generateToken(userLogin.get().getEmail()));
-                userLogin.get().setType(user.get().getType());
                 userLogin.get().setPassword("");
 
                 // Return the populated object

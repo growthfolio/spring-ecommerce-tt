@@ -26,28 +26,17 @@ public class BasicSecurityConfig {
     @Autowired
     private JwtAuthFilter authFilter;
 
-    /**
-     * Define o serviço de busca de detalhes do usuário.
-     * Implementa lógica personalizada para carregar usuários no sistema.
-     */
     @Bean
     UserDetailsService userDetailsService() {
+
         return new UserDetailsServiceImpl();
     }
 
-    /**
-     * Define o codificador de senhas.
-     * Utiliza o BCrypt para criptografar senhas armazenadas.
-     */
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Configura o provedor de autenticação com o serviço de detalhes do usuário
-     * e o codificador de senhas.
-     */
     @Bean
     AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
@@ -56,46 +45,38 @@ public class BasicSecurityConfig {
         return authenticationProvider;
     }
 
-    /**
-     * Configura o gerenciador de autenticação.
-     * Garante que as configurações do Spring Security sejam aplicadas corretamente.
-     */
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    /**
-     * Configura a cadeia de filtros de segurança.
-     * Define regras para autenticação, permissões de endpoints e o filtro JWT.
-     */
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
-            // Configuração de gerenciamento de sessão
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // API Stateless
-            .csrf(csrf -> csrf.disable())
-            .cors(withDefaults());
+    	http
+	        .sessionManagement(management -> management
+	                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+	        		.csrf(csrf -> csrf.disable())
+	        		.cors(withDefaults());
 
-        http
-            .authorizeHttpRequests(auth -> auth
-                // Endpoints públicos
-            	.requestMatchers("/users/register").permitAll()
-                .requestMatchers("/users/login").permitAll()
-                .requestMatchers("/products/all", "/products/names/{name}").permitAll()
-                .requestMatchers("/categories/all", "/categories/name/{name}").permitAll()
-                .requestMatchers("/error/**").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                // Demais endpoints requerem autenticação
-                .anyRequest().authenticated())
-            // Configuração do provedor de autenticação e filtro JWT
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
-            .httpBasic(withDefaults()); // Adiciona autenticação básica
+    	http
+	    	.authorizeHttpRequests((auth) -> auth
+	    			.requestMatchers("/user/login").permitAll()
+	    			.requestMatchers("/user/register").permitAll()
+	    			.requestMatchers("/products/all").permitAll()
+	    			.requestMatchers("/products/names/{name}").permitAll()
+	    			.requestMatchers("/categories/all").permitAll()
+	    			.requestMatchers("/categories/name/{name}").permitAll()
+	    			.requestMatchers("/error/**").permitAll()
+	    			.requestMatchers(HttpMethod.OPTIONS).permitAll()
+	    			.anyRequest().authenticated())
+	    	.authenticationProvider(authenticationProvider())
+	    	.addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+	    	.httpBasic(withDefaults());
 
-        return http.build();
+    	return http.build();
+
     }
+
 }
