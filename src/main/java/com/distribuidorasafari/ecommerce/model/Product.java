@@ -62,6 +62,8 @@ public class Product {
     @JsonIgnoreProperties("products")
     private User user;
 
+    // Getters and Setters
+    
     public Long getId() {
         return id;
     }
