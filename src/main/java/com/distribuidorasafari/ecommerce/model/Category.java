@@ -24,10 +24,11 @@ public class Category {
 
     @NotBlank(message = "O atributo foto é obrigatório")
     private String photo;
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "category", cascade = CascadeType.REMOVE)
+  
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("category")
     private List<Product> products;
+
     
     // Getters and setters
 
