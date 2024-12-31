@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
@@ -52,12 +53,12 @@ public class Product {
     private LocalDateTime updatedAt;
 
     @Column(updatable = false, nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonIgnoreProperties("products")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Ignora propriedades do proxy
     private Category category;
 
     @ManyToOne

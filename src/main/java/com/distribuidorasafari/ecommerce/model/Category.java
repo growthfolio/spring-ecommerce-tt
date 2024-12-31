@@ -1,5 +1,6 @@
 package com.distribuidorasafari.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -24,12 +25,11 @@ public class Category {
 
     @NotBlank(message = "O atributo foto é obrigatório")
     private String photo;
-  
+
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("category")
+    @JsonBackReference
     private List<Product> products;
 
-    
     // Getters and setters
 
     public Long getId() {
