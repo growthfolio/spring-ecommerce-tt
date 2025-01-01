@@ -2,26 +2,17 @@ package com.distribuidorasafari.ecommerce.controller;
 
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.distribuidorasafari.ecommerce.model.Cart;
 import com.distribuidorasafari.ecommerce.model.CartItem;
 import com.distribuidorasafari.ecommerce.model.Product;
-import com.distribuidorasafari.ecommerce.repository.CartRepository;
+import com.distribuidorasafari.ecommerce.repository.CartItemRepository;
 import com.distribuidorasafari.ecommerce.repository.ProductRepository;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import com.distribuidorasafari.ecommerce.service.CartService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/carts")
@@ -29,64 +20,107 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 public class CartController {
 
     @Autowired
-    private CartRepository cartRepository;
+    private CartService cartService;
 
     @Autowired
     private ProductRepository productRepository;
 
-    @GetMapping("/{userId}")
+    @Autowired
+    private CartItemRepository cartItemRepository;
+
+    @GetMapping("/user/{userId}")
     public ResponseEntity<Cart> getCartByUserId(@PathVariable Long userId) {
-        return cartRepository.findByUserId(userId)
-                .map(cart -> ResponseEntity.ok(cart))
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        try {
+            Cart cart = cartService.verifyAndCreateCart(userId);
+            return ResponseEntity.ok(cart);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
-    @PostMapping("/{userId}/add")
-    public ResponseEntity<Cart> addToCart(@PathVariable Long userId, @RequestBody CartItem cartItem) {
-        Optional<Cart> cartOpt = cartRepository.findByUserId(userId);
-        if (cartOpt.isEmpty())
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    @PostMapping("/user/{userId}/add")
+    public ResponseEntity<?> addToCart(@PathVariable Long userId, @RequestBody CartItem cartItem) {
+        if (cartItem.getProduct() == null || cartItem.getProduct().getId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Produto inválido ou não informado.");
+        }
 
-        Cart cart = cartOpt.get();
+        Cart cart = cartService.verifyAndCreateCart(userId);
+
         Optional<Product> productOpt = productRepository.findById(cartItem.getProduct().getId());
-        if (productOpt.isEmpty())
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        if (productOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Produto inválido ou não encontrado.");
+        }
 
         Product product = productOpt.get();
-        cartItem.setProduct(product);
-        cartItem.setUnitPrice(product.getPrice());
-        cart.addCartItem(cartItem);
+        if (product.getAmount() < cartItem.getQuantity()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Quantidade indisponível em estoque.");
+        }
 
-        return ResponseEntity.ok(cartRepository.save(cart));
+        Optional<CartItem> existingItemOpt = cartItemRepository.findByCartAndProduct(cart, product);
+        if (existingItemOpt.isPresent()) {
+            CartItem existingItem = existingItemOpt.get();
+            existingItem.setQuantity(existingItem.getQuantity() + cartItem.getQuantity());
+            cartItemRepository.save(existingItem);
+        } else {
+            cartItem.setCart(cart);
+            cartItem.setProduct(product);
+            cartItem.setUnitPrice(product.getPrice());
+            cartItemRepository.save(cartItem);
+        }
+
+        product.setAmount(product.getAmount() - cartItem.getQuantity());
+        productRepository.save(product);
+
+        return ResponseEntity.ok(cart);
     }
 
-    @DeleteMapping("/{userId}/remove/{cartItemId}")
-    public ResponseEntity<Void> removeFromCart(@PathVariable Long userId, @PathVariable Long cartItemId) {
-        Optional<Cart> cartOpt = cartRepository.findByUserId(userId);
-        if (cartOpt.isEmpty())
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    @DeleteMapping("/user/{userId}/remove/{cartItemId}")
+    public ResponseEntity<?> removeFromCart(@PathVariable Long userId, @PathVariable Long cartItemId) {
+        Cart cart = cartService.verifyAndCreateCart(userId);
 
-        Cart cart = cartOpt.get();
-        cart.getCartItems().removeIf(item -> item.getId().equals(cartItemId));
-        cartRepository.save(cart);
+        Optional<CartItem> itemOpt = cartItemRepository.findById(cartItemId);
+        if (itemOpt.isEmpty() || !itemOpt.get().getCart().equals(cart)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Item não encontrado no carrinho.");
+        }
+
+        CartItem itemToRemove = itemOpt.get();
+
+        Product product = itemToRemove.getProduct();
+        product.setAmount(product.getAmount() + itemToRemove.getQuantity());
+        productRepository.save(product);
+
+        cartItemRepository.delete(itemToRemove);
 
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{userId}/update/{cartItemId}")
-    public ResponseEntity<Cart> updateCartItem(@PathVariable Long userId, @PathVariable Long cartItemId, @RequestParam int quantity) {
-        Optional<Cart> cartOpt = cartRepository.findByUserId(userId);
-        if (cartOpt.isEmpty())
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-
-        Cart cart = cartOpt.get();
-        for (CartItem item : cart.getCartItems()) {
-            if (item.getId().equals(cartItemId)) {
-                item.setQuantity(quantity);
-                break;
-            }
+    @PutMapping("/user/{userId}/update/{cartItemId}")
+    public ResponseEntity<?> updateCartItem(@PathVariable Long userId, @PathVariable Long cartItemId, @RequestParam int quantity) {
+        if (quantity <= 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Quantidade inválida.");
         }
 
-        return ResponseEntity.ok(cartRepository.save(cart));
+        Cart cart = cartService.verifyAndCreateCart(userId);
+
+        Optional<CartItem> itemOpt = cartItemRepository.findById(cartItemId);
+        if (itemOpt.isEmpty() || !itemOpt.get().getCart().equals(cart)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Item não encontrado no carrinho.");
+        }
+
+        CartItem itemToUpdate = itemOpt.get();
+        Product product = itemToUpdate.getProduct();
+        int stockDifference = quantity - itemToUpdate.getQuantity();
+
+        if (product.getAmount() < stockDifference) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Estoque insuficiente.");
+        }
+
+        product.setAmount(product.getAmount() - stockDifference);
+        productRepository.save(product);
+
+        itemToUpdate.setQuantity(quantity);
+        cartItemRepository.save(itemToUpdate);
+
+        return ResponseEntity.ok(cart);
     }
 }

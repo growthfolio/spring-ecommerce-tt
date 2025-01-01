@@ -1,17 +1,6 @@
 package com.distribuidorasafari.ecommerce.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -23,58 +12,48 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 public class User {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@NotBlank(message = "O campo nome é obrigatório")
+	@Size(min = 3, max = 80, message = "O nome deve conter entre 3 e 80 caracteres")
+	@Column(length = 80)
+	private String name;
 
-    @NotBlank(message = "O campo nome é obrigatorio")
-    @Size(min = 3, max = 80, message = "O nome deve conter entre 3 e 80 Caracteres")
-    @Column(length = 80)
-    private String name;
+	@NotBlank(message = "O campo e-mail é obrigatório")
+	@Email(message = "O atributo email deve ser um email válido")
+	@Size(max = 255, message = "O atributo email deve conter no máximo 255 caracteres")
+	@Column(length = 255)
+	private String email;
 
-    @Schema(example = "email@email.com.br")
-    @NotBlank(message = "O campo e-mail é obrigatorio")
-    @Email(message = "O atributo email deve ser um email válido")
-    @Size(max = 255, message = "O atributo email deve conter no maximo 255 caracteres")
-    @Column(length = 255)
-    private String email;
+	@NotBlank(message = "O campo senha é obrigatório")
+	@Size(min = 6, max = 120, message = "O campo senha deve conter no mínimo 6 caracteres")
+	@Column(length = 120)
+	private String password;
 
-    @NotBlank(message = "O campo senha é obrigatorio")
-    @Size(min = 6, max = 120, message = "O campo senha deve conter no minimo 6 caracteres ")
-    @Column(length = 120)
-    private String password;
+	@NotBlank(message = "O campo cpf_cnpj é obrigatório")
+	@Size(min = 11, max = 40, message = "O campo cpf-cnpj deve conter no máximo 40 caracteres")
+	@Column(length = 40)
+	private String cpf_cnpj;
 
-    @NotBlank(message = "O campo cpf_cnpj é obrigatório")
-    @Size(min = 11, max = 40, message = "O campo cpf-cnpj deve conter no máximo 40 caracteres")
-    @Column(length = 40)
-    private String cpf_cnpj;
+	@NotBlank(message = "O atributo tipo é obrigatório")
+	@Size(max = 15, message = "O atributo tipo deve conter no máximo 15 caracteres")
+	@Column(length = 15)
+	private String type;
 
-    @NotBlank(message = "O atributo tipo é obrigatório")
-    @Size(max = 15, message = "O atributo tipo deve conter no máximo 15 caracteres")
-    @Column(length = 15)
-    private String type;
+	@Size(max = 5000, message = "O link da foto não pode ser maior do que 5000 caracteres")
+	@Column(length = 5000)
+	private String photo;
 
-    @Size(max = 5000, message = "O link da foto não pode ser maior do que 5000 caracteres")
-    @Column(length = 5000)
-    private String photo;
+	@UpdateTimestamp
+	private LocalDateTime data;
 
-    @UpdateTimestamp
-    private LocalDateTime data;
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private Cart cart;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
-    @JsonIgnoreProperties("user")
-    private List<Product> products;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = true)
-    @JsonIgnoreProperties("user")
-    private Cart cart;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("user")
-    private List<Order> orders;
-   
-    // Getters and setters
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
+	private List<Product> products;
 
 	public Long getId() {
 		return id;
@@ -140,14 +119,6 @@ public class User {
 		this.data = data;
 	}
 
-	public List<Product> getProducts() {
-		return products;
-	}
-
-	public void setProducts(List<Product> products) {
-		this.products = products;
-	}
-
 	public Cart getCart() {
 		return cart;
 	}
@@ -156,13 +127,11 @@ public class User {
 		this.cart = cart;
 	}
 
-	public List<Order> getOrders() {
-		return orders;
+	public List<Product> getProducts() {
+		return products;
 	}
 
-	public void setOrders(List<Order> orders) {
-		this.orders = orders;
+	public void setProducts(List<Product> products) {
+		this.products = products;
 	}
-
-
 }

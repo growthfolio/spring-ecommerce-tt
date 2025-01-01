@@ -11,12 +11,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "products")
 public class Product {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,7 +25,7 @@ public class Product {
     private String name;
 
     @NotNull(message = "O preço do produto é obrigatório.")
-    @Column(precision = 8, scale = 2) // DECIMAL(8,2)
+    @Column(precision = 8, scale = 2)
     private BigDecimal price;
 
     @PositiveOrZero(message = "A quantidade precisa ser positiva.")
@@ -58,24 +56,13 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Ignora propriedades do proxy
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Ignorar proxies do Hibernate
     private Category category;
 
     @ManyToOne
-    @JsonIgnoreProperties("products")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "products"}) // Evitar serialização cíclica
     private User user;
-    
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("product")
-    private List<CartItem> cartItems;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("product")
-    private List<OrderItem> orderItems;
-
-
-    // Getters and Setters
-    
     public Long getId() {
         return id;
     }
@@ -172,3 +159,4 @@ public class Product {
         this.user = user;
     }
 }
+

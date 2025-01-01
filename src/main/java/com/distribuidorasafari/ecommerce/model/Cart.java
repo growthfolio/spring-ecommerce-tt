@@ -29,100 +29,69 @@ public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    @JsonIgnoreProperties("cart")
+    @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "cart"})
     private User user;
-        
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnoreProperties("cart")
-    private List<CartItem> cartItems = new ArrayList<>();
-    
+
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-    
+
     @Column(updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
-    
-    // Constructor
-    public Cart() {
-        this.cartItems = new ArrayList<>();
-    }
-    
-    // Auxiliary methods for managing relationships
-    public void addCartItem(CartItem item) {
-        cartItems.add(item);
-        item.setCart(this);
-    }
-    
-    public void removeCartItem(CartItem item) {
-        cartItems.remove(item);
-        item.setCart(null);
-    }
-    
-    public void updateCartItem(CartItem item, int newQuantity) {
-        for (CartItem cartItem : cartItems) {
-            if (cartItem.getProduct().equals(item.getProduct())) {
-                cartItem.setQuantity(newQuantity);
-                return;
-            }
-        }
-        // If the product does not exist in the cart, add it
-        this.addCartItem(item);
-    }
 
-    public void clearCart() {
-        this.cartItems.clear();
-    }
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"cart", "hibernateLazyInitializer", "handler"})
+    private List<CartItem> cartItems = new ArrayList<>();
 
-    // Calculate total on Chart
     @Transient
-    public BigDecimal getTotal() {
-        return cartItems.stream()
-            .map(item -> item.getUnitPrice().multiply(new BigDecimal(item.getQuantity())))
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    public BigDecimal getTotal(List<CartItem> cartItems) {
+        return cartItems == null || cartItems.isEmpty()
+                ? BigDecimal.ZERO
+                : cartItems.stream()
+                .map(CartItem::getSubTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    // Getters and Setters    
     public Long getId() {
-		return id;
-	}
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public User getUser() {
-		return user;
-	}
+    public User getUser() {
+        return user;
+    }
 
-	public void setUser(User user) {
-		this.user = user;
-	}
+    public void setUser(User user) {
+        this.user = user;
+    }
 
-	public List<CartItem> getCartItems() {
-		return cartItems;
-	}
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 
-	public void setCartItems(List<CartItem> cartItems) {
-		this.cartItems = cartItems;
-	}
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
-	public LocalDateTime getUpdatedAt() {
-		return updatedAt;
-	}
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-	public void setUpdatedAt(LocalDateTime updatedAt) {
-		this.updatedAt = updatedAt;
-	}
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
+    public List<CartItem> getCartItems() {
+        return cartItems;
+    }
 
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
+    public void setCartItems(List<CartItem> cartItems) {
+        this.cartItems = cartItems;
+    }
 }
