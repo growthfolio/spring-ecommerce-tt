@@ -1,6 +1,7 @@
 package com.distribuidorasafari.ecommerce.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -26,7 +27,7 @@ public class Category {
     private String photo;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonBackReference
+    @JsonIgnoreProperties("category") // Evita incluir a categoria dentro dos produtos
     private List<Product> products;
 
     public Long getId() {

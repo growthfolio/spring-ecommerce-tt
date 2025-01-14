@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -32,7 +33,7 @@ public class Cart {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "cart"})
+    @JsonIgnore
     private User user;
 
     @UpdateTimestamp
@@ -43,7 +44,7 @@ public class Cart {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"cart", "hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({"cart", "hibernateLazyInitializer", "handler","cart"})
     private List<CartItem> cartItems = new ArrayList<>();
 
     @Transient

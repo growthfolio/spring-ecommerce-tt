@@ -26,12 +26,12 @@ public class CartItem {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "cart_id", nullable = false)
-	@JsonIgnoreProperties({"cartItems", "user", "hibernateLazyInitializer", "handler"})
+	@JsonIgnoreProperties({"cartItems", "user", "hibernateLazyInitializer", "handler"}) // Ignora referência ao Cart
 	private Cart cart;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "product_id", nullable = false)
-	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Evita recursão com Product
 	private Product product;
 
 	@PositiveOrZero(message = "O quantidade precisa ser positiva")

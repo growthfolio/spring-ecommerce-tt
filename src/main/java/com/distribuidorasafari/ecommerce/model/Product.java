@@ -56,7 +56,7 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Ignorar proxies do Hibernate
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "products"}) // Ignorar proxies do Hibernate
     private Category category;
 
     @ManyToOne
